@@ -1,5 +1,41 @@
 # Form3 Take Home Exercise
 
+## Build, run and test
+
+Requires Go 1.26+ (see `go.mod`). No external services needed.
+
+```shell
+go build ./...          # compile everything
+go run ./cmd/simulator  # start the simulator, listening on :8080
+go vet ./...            # static checks
+go test ./...           # full test suite (unit + TCP integration tests, ~2-3s)
+go test ./... -race     # same, with the race detector
+```
+
+Try it manually once it's running:
+
+```shell
+printf 'PAYMENT|50\n' | nc localhost 8080
+# RESPONSE|ACCEPTED|Transaction processed
+```
+
+Stop it with `Ctrl+C` (`SIGINT`) or `SIGTERM`: it stops accepting new
+connections immediately, gives in-flight requests up to `GracePeriod` (3s by
+default) to finish, then rejects anything still running with
+`RESPONSE|REJECTED|Cancelled`. See [`DECISIONS.md`](DECISIONS.md) for assumptions.
+
+Config (address, grace period, delay thresholds) is `Config`/`DefaultConfig()`
+in `internal/scheme/server.go` — a plain struct, per the exercise's scope.
+
+### Layout
+
+```
+cmd/simulator/     entrypoint: wiring, signals, logging
+internal/scheme/   server, protocol, shutdown logic, and tests
+```
+
+---
+
 Engineers at Form3 build highly available distributed systems in a microservices environment. Our
 take-home test is designed to evaluate real-world activities involved in this role.
 
